@@ -4,6 +4,7 @@ Find the frequency of a single word
 Find the total frequency of a group of words
 Find the most frequently occurring word
 '''
+import re
 
 def get_text():
 	start = "*** START OF THIS PROJECT GUTENBERG EBOOK ANNA KARENINA ***"
@@ -19,19 +20,17 @@ def get_text():
 	c = 0
 	cap = len(words)
 
-	words = map(lambda s: s.rstrip('').strip('\",.*').replace('\r',''), words)
-	words = filter(lambda w: len(w)>0, words)
+	words = map(lambda s: unicode(s.rstrip('').replace('\r','').replace('.','').replace('"','').replace('_','').strip('",.*;:?!()').lower(), 'ascii', 'ignore'), words)
+	words = filter(lambda w: len(w)>0 and re.search('[a-zA-Z]', w), words)
 	return words
 
 #GET TEXT BEFORE RUNNING OPS
 txt = get_text()
 
 def freq_of(word):
-	lw = word.lower()
-	return len(filter(lambda s: s.lower()==lw, txt))
+	return len(filter(lambda s: s.lower()==word, txt))
 
 def freq_sum(wa,wb):
-	#print "FA: %d FB: %d"%(freq_of(wa), freq_of(wb))
 	return freq_of(wa)+freq_of(wb)
 
 def total_freq_of(group):
@@ -42,21 +41,30 @@ def total_freq_of(group):
 	return reduce(freq_sum, group)
 
 def freq_of_special(word):
-	lw = word.lower()
-	return [word.lower(),len(filter(lambda s: s.lower()==lw, txt))]
+	return [word.lower(),len(filter(lambda s: s.lower()==word, txt))]
 
 def most_freq_word():
-        listOfFreq=map(freq_of_special,txt)
-        theWord = ""
-        bigBully = 0
-        for i in listOfFreq:
-                if i[1]>bigBully:
-                        bigBully=i[1]
-                        theWord=i[0]
+        
+        #Create list(set()) of txt-- much more efficient bc no rept
+        ntxt = list(set(txt))
+
+        #do list of freqs for each item in new condensed list
+        #map highest index to the word at that
+        listOfFreq = [freq_of(i) for i in ntxt]
+        most_pos = ntxt[listOfFreq.index(max(listOfFreq))]
+        return txt[most_pos]
+
+        #listOfFreq=map(freq_of, ntxt)
+        #theWord = ""
+        #bigBully = 0
+        #for i in listOfFreq:
+        #        if i[1]>bigBully:
+        #                bigBully=i[1]
+        #                theWord=i[0]
                 
-        print theWord
+        #print theWord
         #return theWord
 
 print "Freq of 'love': %d\nFreq of 'cat': %d"%(freq_of('love'),freq_of('cat'))
 print "Total freq of ['love','cat']: %d"%(total_freq_of(['love','cat']))
-most_freq_word()
+print "Most frequent word is %s"%(most_freq_word())
